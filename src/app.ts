@@ -42,24 +42,13 @@ app.get('/health', (req, res) => {
 	});
 });
 
-/* app.get('/ready', (req, res) => {
-	const checks = {
-		databaseUrlConfigured: Boolean(dbConfig.url),
-		redisUrlConfigured: Boolean(redisConfig.url),
-		rabbitmqUrlConfigured: Boolean(rabbitmqConfig.url),
-		jwtSecretConfigured: Boolean(process.env.JWT_SECRET)
-	};
- 
-	const ready = Object.values(checks).every(Boolean);
-
-	res.status(ready ? 200 : 503).json({
-		status: ready ? 'ready' : 'not_ready',
-		service: 'order-backend-service',
-		timestamp: new Date().toISOString(),
-		checks
+app.get('/pipeline-check', (req, res) => {
+	res.json({
+		message: 'deployment pipeline working',
+		time: new Date().toISOString()
 	});
 });
-*/
+
 swaggerSetup(app);
 
 //app.use('/api/payment', paymentRouter);
