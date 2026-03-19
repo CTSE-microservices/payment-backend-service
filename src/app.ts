@@ -36,20 +36,20 @@ app.get('/apple-touch-icon-precomposed.png', (req, res) => res.status(204).end()
 app.get('/health', (req, res) => {
 	res.json({
 		status: 'ok',
-		service: 'order-backend-service',
+		service: 'payment-backend-service',
 		timestamp: new Date().toISOString(),
 		uptimeSeconds: Math.floor(process.uptime())
 	});
 });
 
-app.get('/ready', (req, res) => {
+/* app.get('/ready', (req, res) => {
 	const checks = {
 		databaseUrlConfigured: Boolean(dbConfig.url),
 		redisUrlConfigured: Boolean(redisConfig.url),
 		rabbitmqUrlConfigured: Boolean(rabbitmqConfig.url),
 		jwtSecretConfigured: Boolean(process.env.JWT_SECRET)
 	};
-
+ 
 	const ready = Object.values(checks).every(Boolean);
 
 	res.status(ready ? 200 : 503).json({
@@ -59,7 +59,7 @@ app.get('/ready', (req, res) => {
 		checks
 	});
 });
-
+*/
 swaggerSetup(app);
 
 //app.use('/api/payment', paymentRouter);
