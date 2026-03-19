@@ -22,14 +22,19 @@ export const createPendingPaymentFromOrderCreated = async (
     currency,
     paymentMethod = "stripe",
     gateway = "stripe",
-    rawMessage,
   } = input;
+
+  console.log("💰 createPendingPaymentFromOrderCreated called with:", input);
+
+  const parsedOrderId = Number(orderId);
 
   const existingPayment = await prisma.payments.findFirst({
     where: {
-      order_id: orderId,
+      order_id: parsedOrderId,
     },
   });
+
+  console.log("💰 existingPayment:", existingPayment);
 
   if (existingPayment) {
     return existingPayment;
@@ -42,6 +47,8 @@ export const createPendingPaymentFromOrderCreated = async (
     },
   });
 
+  console.log("💰 processingStatus:", processingStatus);
+
   if (!processingStatus) {
     throw new Error(
       "Payment status not found for type='payment' and code='PROCESSING'",
@@ -50,9 +57,17 @@ export const createPendingPaymentFromOrderCreated = async (
 
   const decimalAmount = new Prisma.Decimal(amount);
 
+  console.log("💰 About to create payment with:", {
+    order_id: parsedOrderId,
+    user_uuid: userUuid,
+    amount: decimalAmount.toString(),
+    currency,
+    status: processingStatus.id,
+  });
+
   const payment = await prisma.payments.create({
     data: {
-      order_id: orderId,
+      order_id: parsedOrderId,
       user_uuid: userUuid,
       amout: decimalAmount,
       currency,
@@ -65,12 +80,7 @@ export const createPendingPaymentFromOrderCreated = async (
     },
   });
 
-  await prisma.payment_log.create({
-    data: {
-      payment_id: payment.id,
-      event_type: "order.created.received",
-    },
-  });
+  console.log("💰 Payment created:", payment);
 
   return payment;
 };

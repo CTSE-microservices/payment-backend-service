@@ -17,6 +17,7 @@ export const connectRabbitMQ = async () => {
     });
 
     console.log("✅ Connected to Cloud RabbitMQ");
+    console.log("✅ Exchange asserted:", rabbitmqConfig.exchange);
   } catch (error) {
     console.error("❌ RabbitMQ connection failed:", error);
     throw error;

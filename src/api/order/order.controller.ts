@@ -14,6 +14,8 @@ export const publishOrderCreatedController = async (
       });
     }
 
+    console.log("✅ /api/order/publish hit");
+
     await publishOrderCreated({
       orderId,
       userId,
