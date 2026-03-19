@@ -42,7 +42,7 @@ app.get('/health', (req, res) => {
 	});
 });
 
-app.get('/pipeline-check', (req, res) => {
+app.get('/pipeline', (req, res) => {
 	res.json({
 		message: 'deployment pipeline working',
 		time: new Date().toISOString()
