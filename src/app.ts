@@ -41,7 +41,7 @@ app.get('/health', (req, res) => {
 		uptimeSeconds: Math.floor(process.uptime())
 	});
 });
-
+//CI/CD verification API
 app.get('/pipeline', (req, res) => {
 	res.json({
 		message: 'deployment pipeline working',
