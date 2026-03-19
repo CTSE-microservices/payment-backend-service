@@ -14,6 +14,7 @@ interface OrderCreatedMessage {
 }
 
 export const startOrderCreatedConsumer = async () => {
+  
   const channel = getChannel();
   const rabbitmqConfig = getRabbitmqConfig();
 
@@ -30,6 +31,7 @@ export const startOrderCreatedConsumer = async () => {
     if (!msg) return;
 
     try {
+      console.log("🔥 RAW MESSAGE:", msg?.content.toString());
       const raw = msg.content.toString();
       const parsed: OrderCreatedMessage = JSON.parse(raw);
 

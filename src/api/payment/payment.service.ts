@@ -74,3 +74,15 @@ export const createPendingPaymentFromOrderCreated = async (
 
   return payment;
 };
+
+export const getPaymentByOrderId = async (orderId: number) => {
+  return prisma.payments.findFirst({
+    where: {
+      order_id: orderId,
+    },
+    include: {
+      order_status: true,
+      refunds: true,
+    },
+  });
+};
