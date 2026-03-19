@@ -1,8 +1,9 @@
 import { getChannel } from "../config/rabbitmqConnection.js";
-import { rabbitmqConfig } from "../config/rabbitmq.js";
+import { getRabbitmqConfig } from "../config/rabbitmq.js";
 
 export const publishOrderCreated = async (data: any) => {
   const channel = getChannel();
+  const rabbitmqConfig = getRabbitmqConfig();
 
   const routingKey = "order.created";
 
@@ -17,10 +18,8 @@ export const publishOrderCreated = async (data: any) => {
     rabbitmqConfig.exchange,
     routingKey,
     Buffer.from(JSON.stringify(message)),
-    {
-      persistent: true,
-    },
+    { persistent: true },
   );
 
-  console.log("📤 Published order.created:", message);
+  console.log("📤 order.created published:", message);
 };

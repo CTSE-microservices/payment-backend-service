@@ -7,8 +7,10 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { swaggerSetup } from './api/swagger.js';
 import { dbConfig } from './config/database.js';
 import { redisConfig } from './config/redis.js';
+import orderRoutes from "./api/order/order.routes.js";
 
 dotenv.config({ quiet: true });
+
 
 const app = express();
 
@@ -16,6 +18,7 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(morgan('dev'));
+app.use("/api/order", orderRoutes);
 
 app.get('/', (req, res) => {
 	res.json({

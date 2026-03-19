@@ -1,15 +1,17 @@
 import amqp from "amqplib";
-import { rabbitmqConfig } from "./rabbitmq.js";
+import { getRabbitmqConfig } from "./rabbitmq.js";
 
 let channel: amqp.Channel;
 
 export const connectRabbitMQ = async () => {
   try {
-    const connection = await amqp.connect(rabbitmqConfig.url);
+    const rabbitmqConfig = getRabbitmqConfig();
 
+    console.log("RabbitMQ URL:", rabbitmqConfig.url);
+
+    const connection = await amqp.connect(rabbitmqConfig.url);
     channel = await connection.createChannel();
 
-    // Create exchange
     await channel.assertExchange(rabbitmqConfig.exchange, "topic", {
       durable: true,
     });
