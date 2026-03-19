@@ -7,7 +7,6 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { swaggerSetup } from './api/swagger.js';
 import { dbConfig } from './config/database.js';
 import { redisConfig } from './config/redis.js';
-import { rabbitmqConfig } from './config/rabbitmq.js';
 
 dotenv.config({ quiet: true });
 
