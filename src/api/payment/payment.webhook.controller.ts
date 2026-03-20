@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Stripe from "stripe";
 import { stripe } from "../../config/stripe.js";
+import { markPaymentSuccessFromCheckoutSession } from "./payment.service.js";
 
 export const stripeWebhookController = async (req: Request, res: Response) => {
   try {
@@ -32,6 +33,13 @@ export const stripeWebhookController = async (req: Request, res: Response) => {
         console.log("   session.id:", session.id);
         console.log("   metadata:", session.metadata);
 
+        const updatedPayment = await markPaymentSuccessFromCheckoutSession({
+          id: session.id,
+          payment_status: session.payment_status,
+          metadata: session.metadata,
+        });
+
+        console.log("💰 Payment marked as success:", updatedPayment.id);
         break;
       }
 
