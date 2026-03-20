@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma } from "@prisma/client";
+import generateCode from "../../utils/geenerateCode.js";
 
 const prisma = new PrismaClient();
 
@@ -80,6 +81,15 @@ export const createPendingPaymentFromOrderCreated = async (
     },
   });
 
+  const code = generateCode(payment.id, "PAYMT");
+  await prisma.payments.update({
+    where: {
+      id: payment.id,
+    },
+    data: {
+      payment_code: code,
+    },
+  });
   console.log("💰 Payment created:", payment);
 
   return payment;

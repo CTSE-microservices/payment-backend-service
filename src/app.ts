@@ -9,11 +9,17 @@ import { dbConfig } from './config/database.js';
 import { redisConfig } from './config/redis.js';
 import orderRoutes from "./api/order/order.routes.js";
 import paymentRoutes from "./api/payment/payment.routes.js";
+import paymentWebhookRoutes from "./api/payment/payment.webhook.routes.js";
+
 dotenv.config({ quiet: true });
 
 
 const app = express();
-
+app.use(
+  "/api/webhook",
+  express.raw({ type: "application/json" }),
+  paymentWebhookRoutes,
+);
 app.use(express.json());
 app.use(cors());
 app.use(helmet());
