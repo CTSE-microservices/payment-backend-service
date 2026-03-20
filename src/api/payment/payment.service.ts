@@ -106,3 +106,79 @@ export const getPaymentByOrderId = async (orderId: number) => {
     },
   });
 };
+export const getPaymentStatusByCode = async (code: string) => {
+  return prisma.order_status.findFirst({
+    where: {
+      type: "payment",
+      code,
+    },
+  });
+};
+
+export const markPaymentSuccessFromCheckoutSession = async (session: {
+  id: string;
+  payment_status?: string | null;
+  metadata?: Record<string, string> | null;
+}) => {
+  const paymentId = Number(session.metadata?.paymentId);
+
+  if (!paymentId || Number.isNaN(paymentId)) {
+    throw new Error("Invalid or missing paymentId in Stripe session metadata");
+  }
+
+  const successStatus = await prisma.order_status.findFirst({
+    where: {
+      type: "payment",
+      code: "SUCCESS", // change this if your DB uses COMPLETED / PAID etc.
+    },
+  });
+
+  if (!successStatus) {
+    throw new Error(
+      "Payment status not found for type='payment' and code='SUCCESS'",
+    );
+  }
+
+  const payment = await prisma.payments.findFirst({
+    where: {
+      id: paymentId,
+    },
+  });
+
+  if (!payment) {
+    throw new Error(`Payment not found for id ${paymentId}`);
+  }
+
+  const existingExtra =
+    payment.extra && typeof payment.extra === "object" ? payment.extra : {};
+
+  const updatedPayment = await prisma.payments.update({
+    where: {
+      id: payment.id,
+    },
+    data: {
+      status: successStatus.id,
+      extra: {
+        ...(existingExtra as object),
+        stripeCheckoutSessionId: session.id,
+        stripePaymentStatus: session.payment_status || "paid",
+        paymentCompletedAt: new Date().toISOString(),
+      },
+      updated_at: new Date(),
+    },
+  });
+
+  await prisma.payment_log.create({
+    data: {
+      payment_id: updatedPayment.id,
+      event_type: "checkout.session.completed",
+      payload: {
+        stripeSessionId: session.id,
+        paymentStatus: session.payment_status,
+        metadata: session.metadata,
+      },
+    },
+  });
+
+  return updatedPayment;
+};
