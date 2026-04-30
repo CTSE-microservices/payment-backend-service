@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../../config/database.js';
 
 // Notifies the order service that payment succeeded so it can update payment_id + status
 async function notifyOrderService(

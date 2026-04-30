@@ -4,5 +4,5 @@ import { logger } from './utils/logger.js';
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  logger.info(`Order Service running on port ${PORT}`);
+  logger.info(`Payment Service running on port ${PORT}`);
 });

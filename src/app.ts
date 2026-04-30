@@ -8,6 +8,7 @@ import { swaggerSetup } from './api/swagger.js';
 import { dbConfig } from './config/database.js';
 import { redisConfig } from './config/redis.js';
 import { rabbitmqConfig } from './config/rabbitmq.js';
+import paymentRouter from './api/payment/payment.routes.js';
 
 dotenv.config({ quiet: true });
 
@@ -51,7 +52,7 @@ app.get('/pipeline', (req, res) => {
 
 swaggerSetup(app);
 
-//app.use('/api/payment', paymentRouter);
+app.use('/api/payment', paymentRouter);
 
 app.use(errorHandler);
 
