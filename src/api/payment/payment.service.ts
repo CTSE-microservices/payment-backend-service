@@ -1,6 +1,7 @@
 import { prisma } from '../../config/database.js';
+import { publishPaymentEvent } from '../../utils/rabbitmqPublisher.js';
+import { RK_PAYMENT_SUCCESS, RK_PAYMENT_FAILED } from '../../config/rabbitmq.js';
 
-// Notifies the order service that payment succeeded so it can update payment_id + status
 async function notifyOrderService(
   orderId: number,
   transactionId: number,
@@ -18,7 +19,7 @@ async function notifyOrderService(
       body: JSON.stringify({ statusCode: 'CONFIRMED', paymentId: String(transactionId) }),
     });
   } catch (err) {
-    console.error('[payment-service] failed to notify order service (non-fatal):', err);
+    console.error('[payment-service] failed to notify order service via HTTP (non-fatal):', err);
   }
 }
 
@@ -76,7 +77,6 @@ export class PaymentService {
       });
     });
 
-    // Tell order service the payment went through
     await notifyOrderService(txn.order_id, transactionId, data.authToken);
 
     return updated;
@@ -113,5 +113,89 @@ export class PaymentService {
       where: { id, is_deleted: false },
       include: { status_history: { orderBy: { changed_at: 'desc' } } },
     });
+  }
+
+  /**
+   * Called by the Stripe webhook handler when checkout.session.completed fires.
+   * Marks the transaction as SUCCEEDED and publishes payment.success to RabbitMQ.
+   */
+  static async handleStripeSuccess(stripeSessionId: string, stripePaymentIntentId: string) {
+    const txn = await prisma.payment_transaction.findFirst({
+      where: { gateway_ref: stripeSessionId, is_deleted: false },
+    });
+    if (!txn) throw new Error(`No transaction found for Stripe session ${stripeSessionId}`);
+    if (txn.status === 'SUCCEEDED') return txn; // idempotent — already done
+
+    const updated = await prisma.$transaction(async (tx) => {
+      await tx.payment_status_history.create({
+        data: {
+          transaction_id: txn.id,
+          status: 'SUCCEEDED',
+          changed_by: txn.user_uuid,
+        },
+      });
+      return tx.payment_transaction.update({
+        where: { id: txn.id },
+        data: {
+          status: 'SUCCEEDED',
+          // Store the payment intent ID so we can issue refunds later
+          gateway_ref: stripePaymentIntentId,
+          updated_at: new Date(),
+        },
+        include: { status_history: { orderBy: { changed_at: 'desc' } } },
+      });
+    });
+
+    // Publish payment.success so the order service can confirm the order
+    await publishPaymentEvent(RK_PAYMENT_SUCCESS, {
+      orderId: String(txn.order_id),
+      transactionId: txn.id,
+      amount: txn.amount,
+      currency: txn.currency,
+      stripePaymentIntentId,
+      status: 'SUCCEEDED',
+    });
+
+    return updated;
+  }
+
+  /**
+   * Called by the Stripe webhook handler when a checkout session expires or
+   * a payment_intent fails. Marks the transaction FAILED and publishes payment.failed.
+   */
+  static async handleStripeFailed(stripeSessionId: string, reason: string) {
+    const txn = await prisma.payment_transaction.findFirst({
+      where: { gateway_ref: stripeSessionId, is_deleted: false },
+    });
+    if (!txn) {
+      // Session may not exist if the consumer hasn't run yet — log and move on
+      console.warn(`[payment-service] no transaction for Stripe session ${stripeSessionId}`);
+      return null;
+    }
+    if (txn.status === 'FAILED') return txn;
+
+    const updated = await prisma.$transaction(async (tx) => {
+      await tx.payment_status_history.create({
+        data: {
+          transaction_id: txn.id,
+          status: 'FAILED',
+          changed_by: txn.user_uuid,
+        },
+      });
+      return tx.payment_transaction.update({
+        where: { id: txn.id },
+        data: { status: 'FAILED', updated_at: new Date() },
+        include: { status_history: { orderBy: { changed_at: 'desc' } } },
+      });
+    });
+
+    await publishPaymentEvent(RK_PAYMENT_FAILED, {
+      orderId: String(txn.order_id),
+      transactionId: txn.id,
+      reason,
+      status: 'FAILED',
+    });
+
+    return updated;
   }
 }

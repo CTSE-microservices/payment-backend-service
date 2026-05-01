@@ -2,34 +2,54 @@
     "containerDefinitions": [
         {
             "name": "payment",
-            "image": "580857941747.dkr.ecr.eu-north-1.amazonaws.com/ctse/payment-backend-service@sha256:dfde11b7fbfbe76060c41f8ff5081a2473619f1d01b562ebc95795d4ca9e0acc",
+            "image": "103608802257.dkr.ecr.eu-north-1.amazonaws.com/payment-backend-service:latest",
             "cpu": 0,
             "portMappings": [
                 {
-                    "containerPort": 3000,
-                    "hostPort": 3000,
+                    "containerPort": 3001,
+                    "hostPort": 3001,
                     "protocol": "tcp",
-                    "name": "payment-3000-tcp",
+                    "name": "payment-3001-tcp",
                     "appProtocol": "http"
                 }
             ],
             "essential": true,
             "environment": [
                 {
-                    "name": "DATABASE_URL",
-                    "value": "postgresql://postgres.ipspbpifkbxbuxfqafdj:dh84%40huH%237dn%263hd@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres"
+                    "name": "PORT",
+                    "value": "3001"
                 },
                 {
                     "name": "JWT_EXPIRES_IN",
                     "value": "7d"
                 },
                 {
-                    "name": "PORT",
-                    "value": "3000"
+                    "name": "FRONTEND_URL",
+                    "value": "http://payment-alb-1735044991.eu-north-1.elb.amazonaws.com"
+                },
+                {
+                    "name": "ORDER_SERVICE_URL",
+                    "value": "http://payment-alb-1735044991.eu-north-1.elb.amazonaws.com"
+                },
+                {
+                    "name": "DATABASE_URL",
+                    "value": "__DATABASE_URL__"
                 },
                 {
                     "name": "JWT_SECRET",
-                    "value": "9TWpjmw8EvXCXcATUPF4t8efBmX1Dizo13k4HTP5mIG"
+                    "value": "__JWT_SECRET__"
+                },
+                {
+                    "name": "RABBITMQ_URL",
+                    "value": "__RABBITMQ_URL__"
+                },
+                {
+                    "name": "STRIPE_SECRET_KEY",
+                    "value": "__STRIPE_SECRET_KEY__"
+                },
+                {
+                    "name": "STRIPE_WEBHOOK_SECRET",
+                    "value": "__STRIPE_WEBHOOK_SECRET__"
                 }
             ],
             "environmentFiles": [],
@@ -50,16 +70,10 @@
         }
     ],
     "family": "payment-service-task",
-    "executionRoleArn": "arn:aws:iam::580857941747:role/service-role/ecsTaskExecutionRole",
+    "executionRoleArn": "arn:aws:iam::103608802257:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
-    "revision": 1,
     "volumes": [],
     "placementConstraints": [],
-    "compatibilities": [
-        "EC2",
-        "FARGATE",
-        "MANAGED_INSTANCES"
-    ],
     "runtimePlatform": {
         "cpuArchitecture": "X86_64",
         "operatingSystemFamily": "LINUX"
@@ -67,7 +81,6 @@
     "requiresCompatibilities": [
         "FARGATE"
     ],
-    "cpu": "512",
-    "memory": "2048",
-    "enableFaultInjection": false
+    "cpu": "256",
+    "memory": "512"
 }
