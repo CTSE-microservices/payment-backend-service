@@ -25,11 +25,11 @@
                 },
                 {
                     "name": "FRONTEND_URL",
-                    "value": "http://payment-alb-1735044991.eu-north-1.elb.amazonaws.com"
+                    "value": "https://main.dakdsnk6hcnng.amplifyapp.com"
                 },
                 {
                     "name": "ORDER_SERVICE_URL",
-                    "value": "http://payment-alb-1735044991.eu-north-1.elb.amazonaws.com"
+                    "value": "https://main.dakdsnk6hcnng.amplifyapp.com"
                 },
                 {
                     "name": "DATABASE_URL",
