@@ -5,49 +5,45 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { errorHandler } from './middleware/errorHandler.js';
 import { swaggerSetup } from './api/swagger.js';
-import { dbConfig } from './config/database.js';
-import { redisConfig } from './config/redis.js';
-import { rabbitmqConfig } from './config/rabbitmq.js';
 import paymentRouter from './api/payment/payment.routes.js';
 
 dotenv.config({ quiet: true });
 
 const app = express();
 
+// ── Stripe webhook MUST receive the raw body for signature verification.
+// Register express.raw() for this path BEFORE express.json() parses everything else.
+app.use('/api/payment/webhook/stripe', express.raw({ type: 'application/json' }));
+
 app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(morgan('dev'));
 
-app.get('/', (req, res) => {
-	res.json({
-		service: 'payment-backend-service',
-		status: 'ok',
-		docs: '/api-docs',
-		health: '/health',
-		ready: '/ready'
-	});
+app.get('/', (_req, res) => {
+  res.json({
+    service: 'payment-backend-service',
+    status: 'ok',
+    docs: '/api-docs',
+    health: '/health',
+  });
 });
 
-// Browsers auto-request these; return 204 to avoid noisy 404 logs.
-app.get('/favicon.ico', (req, res) => res.status(204).end());
-app.get('/apple-touch-icon.png', (req, res) => res.status(204).end());
-app.get('/apple-touch-icon-precomposed.png', (req, res) => res.status(204).end());
+app.get('/favicon.ico', (_req, res) => res.status(204).end());
+app.get('/apple-touch-icon.png', (_req, res) => res.status(204).end());
+app.get('/apple-touch-icon-precomposed.png', (_req, res) => res.status(204).end());
 
-app.get('/health', (req, res) => {
-	res.json({
-		status: 'ok',
-		service: 'payment-backend-service',
-		timestamp: new Date().toISOString(),
-		uptimeSeconds: Math.floor(process.uptime())
-	});
+app.get('/health', (_req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'payment-backend-service',
+    timestamp: new Date().toISOString(),
+    uptimeSeconds: Math.floor(process.uptime()),
+  });
 });
-//CI/CD verification API
-app.get('/pipeline', (req, res) => {
-	res.json({
-		message: 'deployment pipeline working',
-		time: new Date().toISOString()
-	});
+
+app.get('/pipeline', (_req, res) => {
+  res.json({ message: 'deployment pipeline working', time: new Date().toISOString() });
 });
 
 swaggerSetup(app);

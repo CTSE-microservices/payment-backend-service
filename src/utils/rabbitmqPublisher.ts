@@ -1,18 +1,21 @@
-import amqplib from 'amqplib';
 import { logger } from './logger.js';
+import { rabbitMQ, EXCHANGE_PAYMENT_EVENTS } from '../config/rabbitmq.js';
 
-export class RabbitMQPublisher {
-  static async publish(queue: string, message: unknown) {
-    try {
-      const conn = await amqplib.connect(process.env.RABBITMQ_URL!);
-      const channel = await conn.createChannel();
-      await channel.assertQueue(queue, { durable: true });
-      channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)), { persistent: true });
-      logger.info(`Published to ${queue}: ${JSON.stringify(message)}`);
-      await channel.close();
-      await conn.close();
-    } catch (err) {
-      logger.error({ err }, 'RabbitMQ publish error');
-    }
+/**
+ * Publishes a message to the payment_events topic exchange.
+ * routingKey should be one of: payment.session_created | payment.success | payment.failed
+ */
+export async function publishPaymentEvent(routingKey: string, message: unknown): Promise<void> {
+  try {
+    const channel = await rabbitMQ.getChannel();
+    channel.publish(
+      EXCHANGE_PAYMENT_EVENTS,
+      routingKey,
+      Buffer.from(JSON.stringify(message)),
+      { persistent: true }
+    );
+    logger.info({ routingKey, message }, 'Payment event published');
+  } catch (err) {
+    logger.error({ err, routingKey }, 'Failed to publish payment event');
   }
 }
