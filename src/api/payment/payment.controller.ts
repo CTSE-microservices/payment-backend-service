@@ -95,8 +95,7 @@ export class PaymentController {
    * POST /api/payment/webhook/stripe
    *
    * Stripe calls this URL after every payment event.
-   * The route must NOT go through express.json() — it needs the raw body
-   * to verify the webhook signature (handled in app.ts with express.raw()).
+   *
    */
   static async stripeWebhook(req: Request, res: Response) {
     const signature = req.headers['stripe-signature'] as string;
