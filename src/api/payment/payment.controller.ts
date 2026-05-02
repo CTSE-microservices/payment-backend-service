@@ -105,6 +105,8 @@ export class PaymentController {
       return res.status(400).json({ message: 'Missing stripe-signature header' });
     }
 
+
+    //test
     let event;
     try {
       // req.body is a raw Buffer here (express.raw middleware applied in app.ts)
